@@ -14,7 +14,6 @@
       margin: 0;
       overflow: hidden;
       font-family: sans-serif;
-      color: #403b32;
     }
 
     #controls {
@@ -45,38 +44,30 @@
       padding: 12px;
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.94);
+      color: #403b32;
       line-height: 1.5;
     }
 
     #intro {
       position: fixed;
-      inset: 0;
-      z-index: 2000;
-      box-sizing: border-box;
-      padding: 28px 24px;
-      overflow-y: auto;
-      background: #fff9e9;
-      text-align: center;
-    }
-
-    #intro img {
-      display: block;
-      width: auto;
-      max-width: 85%;
-      height: 40vh;
-      object-fit: contain;
-      margin: 12px auto 20px;
+      bottom: 24px;
+      left: 16px;
+      right: 16px;
+      z-index: 1000;
+      padding: 20px;
+      border-radius: 20px;
+      background: rgba(255, 250, 235, 0.96);
+      color: #403b32;
+      border-top: 6px solid #e4c85e;
     }
 
     #intro h2 {
-      margin: 12px 0;
+      margin: 0 0 10px;
     }
 
     #intro p {
-      max-width: 440px;
-      margin: 0 auto 24px;
-      line-height: 1.8;
-      text-align: left;
+      margin: 0;
+      line-height: 1.7;
     }
 
     [hidden] {
@@ -91,16 +82,13 @@
     <p id="status">正在準備動物探索功能。</p>
   </div>
 
-  <section id="intro" hidden>
-    <h2>你找到黃喉貂了！</h2>
-    <img src="./animal.png.png" alt="黃喉貂廚師">
+  <div id="intro" hidden>
+    <h2>黃喉貂</h2>
     <p>
-      我是樂垃裡的黃喉貂廚師！
+      你找到我了！我是樂垃裡的黃喉貂廚師。
       這裡之後會放入我的動物介紹與垃圾危害知識。
-      現在可以移開卡牌，繼續觀看。
     </p>
-    <button id="next">掃描下一張</button>
-  </section>
+  </div>
 
   <a-scene
     mindar-image="
@@ -110,31 +98,37 @@
       uiScanning: no;
       uiError: no;
     "
-    renderer="alpha: true"
+    color-space="sRGB"
+    renderer="colorManagement: true; alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <img id="animal" src="./animal.png.png">
+    </a-assets>
 
     <a-camera
       position="0 0 0"
       look-controls="enabled: false">
     </a-camera>
 
-    <a-entity
-      id="card"
-      mindar-image-target="targetIndex: 0">
+    <a-entity id="card" mindar-image-target="targetIndex: 0">
+      <a-image
+        src="#animal"
+        width="0.85"
+        height="1.111"
+        position="0 0 0.15"
+        material="transparent: true; side: double">
+      </a-image>
     </a-entity>
   </a-scene>
 
   <script>
     const scene = document.querySelector("a-scene");
     const startButton = document.querySelector("#start");
-    const nextButton = document.querySelector("#next");
     const statusText = document.querySelector("#status");
     const intro = document.querySelector("#intro");
     const card = document.querySelector("#card");
-
-    let mode = "idle";
-    let stopTimer;
 
     function prepareButton() {
       startButton.disabled = false;
@@ -152,38 +146,27 @@
     }
 
     function showError() {
-      mode = "error";
-      intro.hidden = true;
+      statusText.textContent =
+        "啟動失敗：請確認相機權限、網路與檔案。";
       startButton.hidden = false;
       startButton.disabled = true;
       startButton.textContent = "請重新整理後再試";
-      statusText.textContent =
-        "啟動失敗，請確認相機權限、網路與檔案。";
     }
 
-    async function startScanning() {
-      clearTimeout(stopTimer);
-      mode = "starting";
-      intro.hidden = true;
-      startButton.hidden = false;
+    startButton.addEventListener("click", async () => {
       startButton.disabled = true;
       statusText.textContent =
-        "正在啟動相機，請稍候。";
+        "正在啟動，請允許相機權限並稍候。";
 
       try {
         await scene.systems["mindar-image-system"].start();
       } catch (error) {
-        console.error(error);
         showError();
+        console.error(error);
       }
-    }
-
-    startButton.addEventListener("click", startScanning);
-    nextButton.addEventListener("click", startScanning);
+    });
 
     scene.addEventListener("arReady", () => {
-      if (mode !== "starting") return;
-      mode = "scanning";
       startButton.hidden = true;
       statusText.textContent =
         "請將鏡頭對準完整的黃喉貂卡牌。";
@@ -192,16 +175,14 @@
     scene.addEventListener("arError", showError);
 
     card.addEventListener("targetFound", () => {
-      if (mode !== "scanning") return;
-
-      mode = "reading";
+      statusText.textContent = "找到黃喉貂了！";
       intro.hidden = false;
+    });
 
-      stopTimer = setTimeout(() => {
-        if (mode === "reading") {
-          scene.systems["mindar-image-system"].stop();
-        }
-      }, 0);
+    card.addEventListener("targetLost", () => {
+      statusText.textContent =
+        "卡牌離開畫面了，請重新對準。";
+      intro.hidden = true;
     });
   </script>
 </body>
