@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>樂垃｜動物探索</title>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    #controls {
+      position: fixed;
+      top: 20px;
+      left: 16px;
+      right: 16px;
+      z-index: 1000;
+      text-align: center;
+    }
+
+    button {
+      padding: 14px 26px;
+      border: none;
+      border-radius: 30px;
+      background: #e4c85e;
+      color: #403b32;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+    }
+
+    #status {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      color: #403b32;
+      line-height: 1.5;
+    }
+
+    #intro {
+      position: fixed;
+      bottom: 24px;
+      left: 16px;
+      right: 16px;
+      z-index: 1000;
+      padding: 20px;
+      border-radius: 20px;
+      background: rgba(255, 250, 235, 0.96);
+      color: #403b32;
+      border-top: 6px solid #e4c85e;
+    }
+
+    #intro h2 {
+      margin: 0 0 10px;
+    }
+
+    #intro p {
+      margin: 0;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    <button id="start" disabled>載入中…</button>
+    <p id="status">正在準備動物探索功能。</p>
+  </div>
+
+  <div id="intro" hidden>
+    <h2>黃喉貂</h2>
+    <p>
+      你找到我了！我是樂垃裡的黃喉貂廚師。
+      這裡之後會放入我的動物介紹與垃圾危害知識。
+    </p>
+  </div>
+
+  <a-scene
+    mindar-image="
+      imageTargetSrc: ./targets.mind;
+      autoStart: false;
+      uiLoading: no;
+      uiScanning: no;
+      uiError: no;
+    "
+    color-space="sRGB"
+    renderer="colorManagement: true; alpha: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <img id="animal" src="./animal.png.png">
+    </a-assets>
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false">
+    </a-camera>
+
+    <a-entity id="card" mindar-image-target="targetIndex: 0">
+      <a-image
+        src="#animal"
+        width="0.85"
+        height="1.111"
+        position="0 0 0.15"
+        material="transparent: true; side: double">
+      </a-image>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const scene = document.querySelector("a-scene");
+    const startButton = document.querySelector("#start");
+    const statusText = document.querySelector("#status");
+    const intro = document.querySelector("#intro");
+    const card = document.querySelector("#card");
+
+    function prepareButton() {
+      startButton.disabled = false;
+      startButton.textContent = "開始掃描";
+      statusText.textContent =
+        "按下開始後，請允許使用相機。";
+    }
+
+    if (scene.hasLoaded) {
+      prepareButton();
+    } else {
+      scene.addEventListener("loaded", prepareButton, {
+        once: true
+      });
+    }
+
+    function showError(message) {
+      statusText.textContent = message;
+      startButton.hidden = false;
+      startButton.disabled = true;
+      startButton.textContent = "請重新整理後再試";
+    }
+
+    startButton.addEventListener("click", async () => {
+      startButton.disabled = true;
+      statusText.textContent =
+        "正在啟動，請允許相機權限並稍候。";
+
+      try {
+        await scene.systems["mindar-image-system"].start();
+      } catch (error) {
+        showError(
+          "啟動失敗：請確認相機權限、網路與檔案是否正確。"
+        );
+        console.error(error);
+      }
+    });
+
+    scene.addEventListener("arReady", () => {
+      startButton.hidden = true;
+      statusText.textContent =
+        "請將鏡頭對準完整的黃喉貂卡牌。";
+    });
+
+    scene.addEventListener("arError", () => {
+      showError(
+        "相機無法啟動，請用 Safari 或 Chrome 開啟並允許相機。"
+      );
+    });
+
+    card.addEventListener("targetFound", () => {
+      statusText.textContent = "找到黃喉貂了！";
+      intro.hidden = false;
+    });
+
+    card.addEventListener("targetLost", () => {
+      statusText.textContent =
+        "卡牌離開畫面了，請重新對準。";
+      intro.hidden = true;
+    });
+  </script>
+</body>
+</html>
