@@ -1,189 +1,172 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1">
-  <title>樂垃｜動物探索</title>
-
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: sans-serif;
-    }
-
-    #controls {
-      position: fixed;
-      top: 20px;
-      left: 16px;
-      right: 16px;
-      z-index: 1000;
-      text-align: center;
-    }
-
-    button {
-      padding: 14px 26px;
-      border: none;
-      border-radius: 30px;
-      background: #e4c85e;
-      color: #403b32;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-    }
-
-    #status {
-      padding: 12px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.94);
-      color: #403b32;
-      line-height: 1.5;
-    }
-
-    #intro {
-      position: fixed;
-      bottom: 24px;
-      left: 16px;
-      right: 16px;
-      z-index: 1000;
-      padding: 20px;
-      border-radius: 20px;
-      background: rgba(255, 250, 235, 0.96);
-      color: #403b32;
-      border-top: 6px solid #e4c85e;
-    }
-
-    #intro h2 {
-      margin: 0 0 10px;
-    }
-
-    #intro p {
-      margin: 0;
-      line-height: 1.7;
-    }
-
-    [hidden] {
-      display: none !important;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#435563">
+<title>樂垃｜認識動物朋友</title>
+<style>
+:root{--accent:#F2D86F;--ink:#435563;--cream:#fff9ed;--line:#EFEAE8}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--ink)}
+body{background:transparent}button{font:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer}button:focus-visible{outline:3px solid #435563;outline-offset:4px}[hidden]{display:none!important}
+a-scene{position:fixed!important;inset:0;width:100%;height:100%;z-index:0}
+#home{position:fixed;inset:0;z-index:50;background:#435563;display:grid;place-items:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.home-art{position:relative;width:min(100vw,calc(100svh * .5625));height:min(177.7778vw,100svh);max-height:100%;aspect-ratio:9/16;flex-shrink:0}
+.home-art>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.home-controls{position:absolute;left:10%;right:10%;bottom:4.5%;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.tagline{color:#EFEAE8;font-size:clamp(14px,3.8vw,19px);margin:0;letter-spacing:.03em}
+#start{width:100%;max-width:340px;min-height:54px;padding:14px 20px;background:#EFEAE8;color:#435563;border:0;border-radius:18px;font-size:20px;font-weight:700;box-shadow:0 4px 0 #273d4b44}
+#start:disabled{cursor:wait;opacity:.7}.permission{color:#8B98A6;font-size:13px;line-height:1.5;margin:0}#home-error{background:#fff9ed;color:#435563;padding:12px;border-radius:12px;margin:0;font-size:14px;line-height:1.6}
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none}
+#back{position:absolute;top:calc(env(safe-area-inset-top) + 12px);left:12px;pointer-events:auto;border:0;border-radius:99px;padding:12px 16px;background:#fff9edf2;color:#435563;font-size:15px;min-height:44px}
+#status{position:absolute;top:calc(env(safe-area-inset-top) + 72px);left:20px;right:20px;width:max-content;max-width:calc(100% - 40px);margin:0 auto;padding:12px 20px;background:#fff9edf2;border-radius:18px;text-align:center;line-height:1.5;font-size:16px;box-shadow:0 4px 20px #0000000d}
+#status.small{font-size:14px;padding:9px 15px}
+#sheet{position:fixed;z-index:20;bottom:0;left:12px;right:12px;max-width:650px;margin:auto;height:40svh;display:flex;flex-direction:column;border-radius:24px 24px 0 0;border-top:6px solid var(--accent);background:var(--cream);box-shadow:0 -4px 24px #00000018;padding-bottom:env(safe-area-inset-bottom);color:#41464c}
+#sheet.collapsed{height:auto;border-radius:20px 20px 0 0}
+#sheet-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-shrink:0;min-height:64px;border:0;background:transparent;padding:16px 20px;color:#41464c;text-align:left}
+#animal-name{font-size:23px;font-weight:750}#toggle-label{font-size:14px;white-space:nowrap}#toggle-arrow{display:inline-block;font-size:22px;vertical-align:middle;margin-left:5px;color:var(--ink)}
+#sheet-body{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:0 20px 24px;min-height:0;scrollbar-width:thin}
+#sheet.collapsed #sheet-body{display:none}.section-heading{display:table;margin:4px 0 12px;padding:7px 14px;background:var(--accent);color:#233745;border-radius:30px;font-size:17px;font-weight:700}
+.copy-box{margin:0 0 22px;background:#fff;border-radius:17px;padding:17px;font-size:18px;line-height:1.7;overflow-wrap:anywhere}.copy-box:last-child{margin-bottom:0}
+@media(min-width:700px){.home-controls{gap:16px}#sheet{height:40svh}.tagline{font-size:19px}}
+@media(max-height:540px) and (orientation:landscape){.home-controls{gap:4px}#start{min-height:32px;padding:6px;font-size:14px}.tagline{font-size:10px}.permission{font-size:9px}#sheet{left:auto;right:12px;width:45vw;height:65svh}#status{left:12px;right:auto;max-width:45vw}}
+</style>
+<script>window.engineLoadFailed=()=>{document.addEventListener('DOMContentLoaded',()=>{document.querySelector('#home-error').hidden=false;document.querySelector('#home-error').textContent='載入失敗，請確認網路後重新整理。';document.querySelector('#start').textContent='請重新整理';});};</script>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js" onerror="engineLoadFailed()"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js" onerror="engineLoadFailed()"></script>
 </head>
-
 <body>
-  <div id="controls">
-    <button id="start" disabled>載入中…</button>
-    <p id="status">正在準備動物探索功能。</p>
+<main id="home">
+ <div class="home-art">
+  <img src="./home.jpg" alt="樂垃，八位動物朋友邀請你一起探索" fetchpriority="high">
+  <div class="home-controls">
+   <p class="tagline">掃描角色卡，認識動物朋友</p>
+   <button id="start" disabled>載入中…</button>
+   <p class="permission">請允許使用相機</p>
+   <p id="home-error" role="alert" hidden></p>
   </div>
-
-  <div id="intro" hidden>
-    <h2>黃喉貂</h2>
-    <p>
-      你找到我了！我是樂垃裡的黃喉貂廚師。
-      這裡之後會放入我的動物介紹與垃圾危害知識。
-    </p>
-  </div>
-
-  <a-scene
-    mindar-image="
-      imageTargetSrc: ./targets.mind;
-      autoStart: false;
-      uiLoading: no;
-      uiScanning: no;
-      uiError: no;
-    "
-    color-space="sRGB"
-    renderer="colorManagement: true; alpha: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
-
-    <a-assets>
-      <img id="animal" src="./animal.png.png">
-    </a-assets>
-
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false">
-    </a-camera>
-
-    <a-entity id="card" mindar-image-target="targetIndex: 0">
-      <a-image
-        src="#animal"
-        width="0.85"
-        height="1.111"
-        position="0 0 0.15"
-        material="transparent: true; side: double">
-      </a-image>
-    </a-entity>
-  </a-scene>
-
-  <script>
-    const scene = document.querySelector("a-scene");
-    const startButton = document.querySelector("#start");
-    const statusText = document.querySelector("#status");
-    const intro = document.querySelector("#intro");
-    const card = document.querySelector("#card");
-
-    function prepareButton() {
-      startButton.disabled = false;
-      startButton.textContent = "開始掃描";
-      statusText.textContent =
-        "按下開始後，請允許使用相機。";
-    }
-
-    if (scene.hasLoaded) {
-      prepareButton();
-    } else {
-      scene.addEventListener("loaded", prepareButton, {
-        once: true
-      });
-    }
-
-    function showError() {
-      statusText.textContent =
-        "啟動失敗：請確認相機權限、網路與檔案。";
-      startButton.hidden = false;
-      startButton.disabled = true;
-      startButton.textContent = "請重新整理後再試";
-    }
-
-    startButton.addEventListener("click", async () => {
-      startButton.disabled = true;
-      statusText.textContent =
-        "正在啟動，請允許相機權限並稍候。";
-
-      try {
-        await scene.systems["mindar-image-system"].start();
-      } catch (error) {
-        showError();
-        console.error(error);
-      }
-    });
-
-    scene.addEventListener("arReady", () => {
-      startButton.hidden = true;
-      statusText.textContent =
-        "請將鏡頭對準完整的黃喉貂卡牌。";
-    });
-
-    scene.addEventListener("arError", showError);
-
-    card.addEventListener("targetFound", () => {
-      statusText.textContent = "找到黃喉貂了！";
-      intro.hidden = false;
-    });
-
-    card.addEventListener("targetLost", () => {
-      statusText.textContent =
-        "卡牌離開畫面了，請重新對準。";
-      intro.hidden = true;
-    });
-  </script>
+ </div>
+</main>
+<div id="hud" hidden><button id="back" aria-label="關閉相機並回首頁">‹ 回首頁</button><p id="status" role="status" aria-live="polite">請對準角色卡</p></div>
+<section id="sheet" aria-label="動物介紹" hidden>
+ <button id="sheet-toggle" aria-expanded="true" aria-controls="sheet-body"><span id="animal-name"></span><span><span id="toggle-label">收合介紹</span><span id="toggle-arrow" aria-hidden="true">⌄</span></span></button>
+ <div id="sheet-body" tabindex="0" role="region" aria-label="動物介紹與垃圾危害，可上下滑動">
+  <h2 class="section-heading" id="intro-title"></h2><p class="copy-box" id="intro-copy"></p>
+  <h2 class="section-heading" id="harm-title"></h2><p class="copy-box" id="harm-copy"></p>
+ </div>
+</section>
+<a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no;" color-space="sRGB" renderer="colorManagement: true; alpha: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" loading-screen="enabled: false">
+<a-assets timeout="20000"><img id="asset-goat" src="./goat.png" crossorigin="anonymous">
+<img id="asset-deer" src="./deer.png" crossorigin="anonymous">
+<img id="asset-frog" src="./frog.png" crossorigin="anonymous">
+<img id="asset-bear" src="./bear.png" crossorigin="anonymous">
+<img id="asset-dolphin" src="./dolphin.png" crossorigin="anonymous">
+<img id="asset-leopard-cat" src="./leopard-cat.png" crossorigin="anonymous">
+<img id="asset-marten" src="./marten.png" crossorigin="anonymous">
+<img id="asset-turtle" src="./turtle.png" crossorigin="anonymous"></a-assets>
+<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+<a-entity id="target-0" mindar-image-target="targetIndex: 0">
+ <a-entity id="character-0" position="0 0 0.15"><a-image src="#asset-goat" width="0.488778" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+<a-entity id="target-1" mindar-image-target="targetIndex: 1">
+ <a-entity id="character-1" position="0 0 0.15"><a-image src="#asset-deer" width="0.35216" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+<a-entity id="target-2" mindar-image-target="targetIndex: 2">
+ <a-entity id="character-2" position="0 0 0.15"><a-image src="#asset-frog" width="0.771879" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+<a-entity id="target-3" mindar-image-target="targetIndex: 3">
+ <a-entity id="character-3" position="0 0 0.15"><a-image src="#asset-bear" width="0.688278" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+<a-entity id="target-4" mindar-image-target="targetIndex: 4">
+ <a-entity id="character-4" position="0 0 0.15"><a-image src="#asset-dolphin" width="0.621318" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+<a-entity id="target-5" mindar-image-target="targetIndex: 5">
+ <a-entity id="character-5" position="0 0 0.15"><a-image src="#asset-leopard-cat" width="0.814733" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+<a-entity id="target-6" mindar-image-target="targetIndex: 6">
+ <a-entity id="character-6" position="0 0 0.15"><a-image src="#asset-marten" width="0.85" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+<a-entity id="target-7" mindar-image-target="targetIndex: 7">
+ <a-entity id="character-7" position="0 0 0.15"><a-image src="#asset-turtle" width="0.725704" height="1.111" material="shader: flat; transparent: true; side: double; alphaTest: 0.01"></a-image></a-entity>
+</a-entity>
+</a-scene>
+<script id="animal-data" type="application/json">[{"id": "goat", "name": "台灣長鬃山羊", "color": "#41A477", "harmTitle": "回收垃圾帶來的危害", "intro": "台灣長鬃山羊是臺灣特有的動物，雌雄頭上都有一對短短、向後彎曲的角。牠生活在山林中，以嫩葉、草和其他植物為食。牠的四肢強健，特殊的蹄能幫助牠抓住岩石表面，即使在陡峭的山坡上，也能靈活行走，是山林裡的攀岩高手。", "harm": "玻璃瓶和金屬罐雖然可以回收，留在山林裡卻可能變成危險。破裂的玻璃與尖銳的罐口，可能讓經過或覓食的動物受傷，長鬃山羊也可能遇到這些風險。登山時，把瓶罐和其他垃圾一起帶下山，妥善分類回收，才能讓牠安心地在山林中生活。"}, {"id": "deer", "name": "台灣水鹿", "color": "#41A477", "harmTitle": "回收垃圾帶來的危害", "intro": "台灣水鹿是臺灣體型最大的野生草食動物，生活在山林與草地，以嫩葉、嫩草等植物為食。牠的身上沒有梅花鹿那樣的白色斑點，毛色會隨季節深淺變化。雄鹿頭上有分叉的鹿角，每年會脫落，再重新長出。牠們常在清晨或黃昏活動，是山林裡的大個子鄰居。", "harm": "留在山林裡的玻璃瓶、金屬罐等回收物，可能成為水鹿活動時的危險。破碎的玻璃和尖銳的金屬邊緣，可能造成割傷；瓶罐裡若還有食物，也可能吸引野生動物靠近翻找。把回收物清空、妥善收好並帶下山，才能讓水鹿覓食的地方更安全。"}, {"id": "frog", "name": "台北樹蛙", "color": "#37A3AA", "harmTitle": "特殊垃圾帶來的危害", "intro": "台北樹蛙是臺灣特有的青蛙，主要生活在臺灣中部以北的低海拔地區。牠背部是綠色的，眼睛與腹部帶有黃色，指趾末端的小吸盤能幫助牠攀附植物。牠也是少數在冬天繁殖的青蛙，天氣轉涼時，雄蛙會躲在落葉堆下鳴叫，吸引同伴前來。", "harm": "廢電池等需要另外回收處理的垃圾，如果隨意丟在野外，外殼損壞後，裡面的有害物質可能污染土壤與水源。這些污染可能影響樹蛙生活與蝌蚪成長的環境。用完的電池應交給回收管道，別讓小小一顆電池，成為牠們家園裡的隱藏危險。"}, {"id": "bear", "name": "台灣黑熊", "color": "#F2D86F", "harmTitle": "廚餘帶來的危害", "intro": "台灣黑熊是臺灣唯一原生的熊類，全身覆蓋黑色毛髮，胸前有醒目的淺色V字形或新月形斑紋。牠是雜食性動物，以果實、堅果和嫩芽等植物性食物為主，也會吃昆蟲與其他動物。牠的嗅覺十分靈敏，能幫助牠在山林裡尋找食物。", "harm": "留在山林裡的剩飯剩菜，氣味可能吸引黑熊靠近山屋、營地或住家。當牠習慣在人類活動的地方找到食物，就可能一再回來，增加人與熊相遇、發生衝突的風險。食物與廚餘都應妥善收好，垃圾也要全部帶下山，讓黑熊繼續依靠山林中的天然食物生活。"}, {"id": "dolphin", "name": "中華白海豚", "color": "#C87898", "harmTitle": "一般垃圾帶來的危害", "intro": "中華白海豚生活在沿岸較淺的海域，在臺灣西部近海也能看見牠的身影，主要以魚類為食。牠並不是一出生就白白的！幼豚的身體偏灰色，隨著成長逐漸變淡，成年後可能呈現白色或粉紅色。雖然生活在海裡，牠和我們一樣用肺呼吸，需要浮上海面換氣。", "harm": "塑膠袋、食品包裝等垃圾，可能隨著風吹、雨水和河流進入海洋，讓白海豚生活的地方充滿危險。鯨豚若不小心吞下塑膠垃圾，可能因為無法消化、消化道阻塞而影響進食與健康。減少使用一次性用品、妥善丟棄垃圾，到海邊遊玩時把垃圾帶走，就是保護牠們的方法。"}, {"id": "leopard-cat", "name": "石虎", "color": "#37A3AA", "harmTitle": "特殊垃圾帶來的危害", "intro": "石虎的體型和家貓差不多，身上布滿黑褐色斑點，耳朵背面有明顯的白斑，眼睛內側還有向額頭延伸的白色線條。牠主要生活在淺山與農村周邊，喜歡單獨行動，多在夜間外出。牠會捕食老鼠、鳥類等小動物，是農田周邊的捕鼠好幫手。", "harm": "農藥剩液、未妥善處理的農藥容器等特殊垃圾，如果隨意丟棄，其中殘留的有害物質可能污染土壤與水源，讓石虎和其他動物生活的環境受到影響。這些廢棄物應由大人依照規定交給合適的回收處理管道。遇到不明藥瓶，不要自行打開或撿拾，請告訴大人協助處理。"}, {"id": "marten", "name": "黃喉貂", "color": "#F2D86F", "harmTitle": "廚餘帶來的危害", "intro": "黃喉貂的喉部與胸前有醒目的黃色毛，是牠最明顯的特徵。牠身體修長、尾巴長，動作靈活，也擅長爬樹。生活在臺灣山林中的黃喉貂，會捕食小型動物，也會吃昆蟲和果實，有時還會合作獵捕比自己大的山羌，因此又被稱為「羌仔虎」。", "harm": "留在山林裡的剩飯剩菜，可能吸引黃喉貂靠近人類活動的地方覓食。長期取得人類食物，可能改變牠自然覓食的習慣，增加靠近人或討食的機會。人類食物中的調味與過多鹽分，也可能影響牠的健康。因此，廚餘應妥善收好並帶下山，不讓剩下的食物成為牠的危險大餐。"}, {"id": "turtle", "name": "玳瑁", "color": "#C87898", "harmTitle": "一般垃圾帶來的危害", "intro": "玳瑁是一種海龜，嘴巴尖尖彎彎的，像老鷹的嘴，因此又叫「鷹嘴海龜」。牠的背甲有美麗的花紋，盾片常像屋瓦一樣重疊排列。牠主要在珊瑚礁附近活動，以海綿等生物為食，尖窄的嘴能幫助牠從礁石縫隙中取得食物。", "harm": "漂進海裡的塑膠袋、食品包裝和塑膠碎片，可能在海龜覓食時被不小心吞下。這些垃圾無法被消化，可能堵住腸胃，讓牠難以正常進食，甚至危及生命。少用一次性塑膠用品、不亂丟垃圾，也不讓垃圾流進排水溝與河川，就能減少牠們在海裡遇到的危險。"}]</script>
+<script>
+'use strict';
+const animals=JSON.parse(document.querySelector('#animal-data').textContent);
+const $=id=>document.getElementById(id);
+const scene=document.querySelector('a-scene');
+const home=$('home'),start=$('start'),hud=$('hud'),status=$('status'),sheet=$('sheet'),body=$('sheet-body');
+let running=false,starting=false,current=null,statusTimer=null,startTimer=null;
+const visibleTargets=new Set(),appeared=new Set();
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function showStatus(text,small=false){clearTimeout(statusTimer);status.textContent=text;status.classList.toggle('small',small);status.hidden=false;}
+function expandSheet(expanded){sheet.classList.toggle('collapsed',!expanded);$('sheet-toggle').setAttribute('aria-expanded',String(expanded));$('toggle-label').textContent=expanded?'收合介紹':'展開介紹';$('toggle-arrow').textContent=expanded?'⌄':'⌃';}
+function setAnimal(index){
+ const a=animals[index];
+ sheet.style.setProperty('--accent',a.color);
+ $('animal-name').textContent=a.name;$('intro-title').textContent='認識'+a.name;
+ $('intro-copy').textContent=a.intro;$('harm-title').textContent=a.harmTitle;$('harm-copy').textContent=a.harm;
+ sheet.hidden=false;expandSheet(true);body.scrollTop=0;current=index;
+}
+$('sheet-toggle').addEventListener('click',()=>expandSheet(sheet.classList.contains('collapsed')));
+animals.forEach((a,index)=>{
+ const target=$('target-'+index),character=$('character-'+index);
+ target.addEventListener('targetFound',()=>{
+  if(!running)return;
+  visibleTargets.add(index);
+  if(current!==index)setAnimal(index);
+  if(!appeared.has(index)){
+   appeared.add(index);
+   if(!reducedMotion){
+    character.setAttribute('scale','0.01 0.01 0.01');
+    character.setAttribute('animation__entrance','property: scale; from: 0.01 0.01 0.01; to: 1 1 1; dur: 500; easing: easeOutCubic; loop: false');
+   }
+  }
+  showStatus('找到'+a.name+'了！');
+  statusTimer=setTimeout(()=>{if(visibleTargets.size)status.hidden=true;},2000);
+ });
+ target.addEventListener('targetLost',()=>{
+  visibleTargets.delete(index);
+  if(running&&!visibleTargets.size)showStatus('請重新對準卡牌',true);
+  // MindAR hides the character; keep the last introduction, scroll and collapse state.
+ });
+});
+function stopCamera(){
+ try{scene.systems['mindar-image-system']?.stop();}catch(e){console.warn('停止相機',e);}
+ document.querySelectorAll('video').forEach(video=>{if(video.srcObject){video.srcObject.getTracks().forEach(t=>t.stop());}});
+}
+function fail(message){
+ clearTimeout(startTimer);clearTimeout(statusTimer);running=false;starting=false;stopCamera();
+ visibleTargets.clear();hud.hidden=true;sheet.hidden=true;home.hidden=false;
+ $('home-error').hidden=false;$('home-error').textContent=message;
+ start.textContent='重新載入';start.disabled=false;start.dataset.reload='true';
+}
+function enableStart(){
+ if(!window.AFRAME||!scene.systems['mindar-image-system'])return;
+ start.disabled=false;start.textContent='開始掃描';
+}
+scene.addEventListener('loaded',enableStart);if(scene.hasLoaded)enableStart();
+setTimeout(()=>{if(start.disabled&&!starting&&!running){$('home-error').hidden=false;$('home-error').textContent='掃描程式尚未載入，請確認網路，並使用 Safari 重新開啟網站。';start.disabled=false;start.textContent='重新載入';start.dataset.reload='true';}},25000);
+start.addEventListener('click',async()=>{
+ if(start.dataset.reload){location.reload();return;}
+ if(starting||running)return;
+ const missing=animals.find(a=>{const img=$('asset-'+a.id);return !img.complete||!img.naturalWidth;});
+ if(missing){fail('角色圖片尚未載入完成，請確認網路後重新載入。');return;}
+ starting=true;start.disabled=true;start.textContent='正在開啟相機…';$('home-error').hidden=true;
+ startTimer=setTimeout(()=>fail('載入時間較久，請確認網路與相機權限後重新載入。'),60000);
+ try{await scene.systems['mindar-image-system'].start();}
+ catch(error){console.error(error);fail('無法啟動掃描。請確認已允許相機權限，並使用 Safari 開啟網站後重新載入。');}
+});
+scene.addEventListener('arReady',()=>{
+ if(!starting)return;
+ clearTimeout(startTimer);starting=false;running=true;home.hidden=true;hud.hidden=false;
+ showStatus('請對準角色卡');
+});
+scene.addEventListener('arError',()=>fail('無法啟動相機，請確認相機權限與網路後重新載入。'));
+$('back').addEventListener('click',()=>{running=false;clearTimeout(statusTimer);clearTimeout(startTimer);stopCamera();location.reload();});
+window.addEventListener('pagehide',()=>{running=false;stopCamera();});
+window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
+</script>
 </body>
 </html>
